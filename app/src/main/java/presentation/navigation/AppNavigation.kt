@@ -20,6 +20,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.maps.model.LatLng
 import presentation.map.MapScreen
 import presentation.map.MapViewModel
 import presentation.search.SearchScreen
@@ -45,6 +46,19 @@ fun AppNavigation(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
+    /**
+     * Called when user taps "Get Directions" from Timetable or Search.
+     * Sets the destination on MapViewModel then navigates to the Map tab.
+     */
+    fun navigateToMapWithDirections(latLng: LatLng, name: String) {
+        mapViewModel.setDestination(latLng, name)
+        navController.navigate(Screen.Map.route) {
+            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
     Scaffold(
         bottomBar = {
             NavigationBar {
@@ -53,7 +67,6 @@ fun AppNavigation(
                         selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                         onClick = {
                             navController.navigate(screen.route) {
-                                // Pop up to start so back stack doesn't grow unbounded
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
@@ -71,9 +84,21 @@ fun AppNavigation(
             startDestination = Screen.Map.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Map.route) { MapScreen(mapViewModel) }
-            composable(Screen.Search.route) { SearchScreen(searchViewModel) }
-            composable(Screen.Timetable.route) { TimetableScreen(timetableViewModel) }
+            composable(Screen.Map.route) {
+                MapScreen(mapViewModel)
+            }
+            composable(Screen.Search.route) {
+                SearchScreen(
+                    viewModel = searchViewModel,
+                    onGetDirections = ::navigateToMapWithDirections
+                )
+            }
+            composable(Screen.Timetable.route) {
+                TimetableScreen(
+                    viewModel = timetableViewModel,
+                    onGetDirections = ::navigateToMapWithDirections
+                )
+            }
         }
     }
 }
