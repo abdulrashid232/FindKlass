@@ -1,6 +1,8 @@
 package data.dao
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import data.models.ClassSchedule
@@ -31,4 +33,7 @@ interface ClassScheduleDao {
         ORDER BY cs.dayOfWeek, cs.startTime
     """)
     fun getUserSchedule(studentId: String): Flow<List<ClassWithDetails>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllSchedules(schedules: List<ClassSchedule>)
 }
