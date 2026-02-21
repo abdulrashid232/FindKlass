@@ -69,11 +69,19 @@ dependencies {
 
 // ----- Coroutines -----
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
 
 // ----- Lifecycle ViewModel -----
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
 // ----- Google Maps -----
     implementation(libs.play.services.maps)
     implementation(libs.maps.compose)
+
+// ----- Location -----
+    implementation(libs.play.services.location)
+
+// ----- Navigation -----
+    implementation(libs.navigation.compose)
 }
