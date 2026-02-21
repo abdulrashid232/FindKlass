@@ -4,44 +4,33 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.activity.viewModels
 import com.example.findklass.ui.theme.FindKlassTheme
+import presentation.ViewModelFactory
+import presentation.map.MapViewModel
+import presentation.navigation.AppNavigation
+import presentation.search.SearchViewModel
+import presentation.timetable.TimetableViewModel
 
 class MainActivity : ComponentActivity() {
+
+    private val factory by lazy { ViewModelFactory(application) }
+
+    private val mapViewModel: MapViewModel by viewModels { factory }
+    private val searchViewModel: SearchViewModel by viewModels { factory }
+    private val timetableViewModel: TimetableViewModel by viewModels { factory }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             FindKlassTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "FindKlass",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                AppNavigation(
+                    mapViewModel = mapViewModel,
+                    searchViewModel = searchViewModel,
+                    timetableViewModel = timetableViewModel
+                )
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name! Ready to find your classes?",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    FindKlassTheme {
-        Greeting("FindKlass")
     }
 }
