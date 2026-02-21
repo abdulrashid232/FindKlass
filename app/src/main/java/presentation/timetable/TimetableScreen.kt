@@ -14,9 +14,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,10 +30,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.android.gms.maps.model.LatLng
 import data.relations.ClassWithDetails
 
 @Composable
-fun TimetableScreen(viewModel: TimetableViewModel) {
+fun TimetableScreen(
+    viewModel: TimetableViewModel,
+    onGetDirections: (LatLng, String) -> Unit  // lambda passed from AppNavigation
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -49,13 +58,18 @@ fun TimetableScreen(viewModel: TimetableViewModel) {
                     contentPadding = PaddingValues(16.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Iterate weekday groups in insertion order (already sorted Mon–Sun)
                     uiState.scheduleByDay.forEach { (day, classes) ->
-                        item {
-                            DayHeader(day)
-                        }
+                        item { DayHeader(day) }
                         items(classes, key = { it.classSchedule.id }) { classDetails ->
-                            ClassCard(classDetails)
+                            ClassCard(
+                                details = classDetails,
+                                onGetDirections = {
+                                    onGetDirections(
+                                        LatLng(classDetails.latitude, classDetails.longitude),
+                                        classDetails.buildingName
+                                    )
+                                }
+                            )
                             Spacer(modifier = Modifier.height(8.dp))
                         }
                         item { Spacer(modifier = Modifier.height(8.dp)) }
@@ -77,7 +91,10 @@ private fun DayHeader(day: String) {
 }
 
 @Composable
-private fun ClassCard(details: ClassWithDetails) {
+private fun ClassCard(
+    details: ClassWithDetails,
+    onGetDirections: () -> Unit
+) {
     val schedule = details.classSchedule
 
     Card(
@@ -85,43 +102,60 @@ private fun ClassCard(details: ClassWithDetails) {
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(modifier = Modifier.padding(16.dp)) {
-            // Time column
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    schedule.startTime,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Box(
-                    modifier = Modifier
-                        .width(2.dp)
-                        .height(24.dp)
-                        .background(MaterialTheme.colorScheme.outlineVariant)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    schedule.endTime,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Time column
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        schedule.startTime,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Box(
+                        modifier = Modifier
+                            .width(2.dp)
+                            .height(24.dp)
+                            .background(MaterialTheme.colorScheme.outlineVariant)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        schedule.endTime,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "${details.courseCode} — ${details.courseTitle}",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "Room ${details.roomNumber} · ${details.buildingName}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Course details column
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    "${details.courseCode} — ${details.courseTitle}",
-                    style = MaterialTheme.typography.bodyLarge
+            // "Get Directions" button — triggers route fetch and switches to Map tab
+            Button(
+                onClick = onGetDirections,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    "Room ${details.roomNumber} · ${details.buildingName}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            ) {
+                Icon(Icons.Default.LocationOn, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Get Directions")
             }
         }
     }
