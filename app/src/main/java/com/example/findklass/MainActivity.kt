@@ -3,26 +3,34 @@ package com.example.findklass
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.*
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import com.example.findklass.ui.theme.FindKlassTheme
+import presentation.ViewModelFactory
+import presentation.map.MapViewModel
+import presentation.navigation.AppNavigation
+import presentation.search.SearchViewModel
+import presentation.timetable.TimetableViewModel
 
 class MainActivity : ComponentActivity() {
+
+    private val factory by lazy { ViewModelFactory(application) }
+
+    private val mapViewModel: MapViewModel by viewModels { factory }
+    private val searchViewModel: SearchViewModel by viewModels { factory }
+    private val timetableViewModel: TimetableViewModel by viewModels { factory }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContent {
-            val singapore = LatLng(1.35, 103.87)
-
-            val cameraPositionState = rememberCameraPositionState {
-                position = CameraPosition.fromLatLngZoom(singapore, 10f)
+            FindKlassTheme {
+                AppNavigation(
+                    mapViewModel = mapViewModel,
+                    searchViewModel = searchViewModel,
+                    timetableViewModel = timetableViewModel
+                )
             }
-
-            GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState
-            )
         }
     }
 }

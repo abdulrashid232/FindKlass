@@ -17,6 +17,18 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Read MAPS_API_KEY from local.properties and expose via BuildConfig.
+        // Add:  MAPS_API_KEY=your_key_here  to local.properties (auto-gitignored).
+        // Uses only Kotlin stdlib — no import needed, so plugins{} stays first.
+        val mapsApiKey = rootProject.file("local.properties")
+            .takeIf { it.exists() }
+            ?.readLines()
+            ?.firstOrNull { it.startsWith("MAPS_API_KEY=") }
+            ?.substringAfter("=")
+            ?: ""
+        buildConfigField("String", "MAPS_API_KEY", "\"$mapsApiKey\"")
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
     buildTypes {
@@ -37,6 +49,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -57,23 +70,35 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
     // ----- Room -----
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
-// ----- Retrofit -----
+    // ----- Retrofit -----
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp.logging)
 
-// ----- Coroutines -----
+    // ----- Coroutines -----
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
 
-// ----- Lifecycle ViewModel -----
+    // ----- Lifecycle ViewModel -----
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
-// ----- Google Maps -----
+    // ----- Google Maps -----
     implementation(libs.play.services.maps)
     implementation(libs.maps.compose)
+
+    // ----- Location -----
+    implementation(libs.play.services.location)
+
+    // ----- Navigation -----
+    implementation(libs.navigation.compose)
+
+    // ----- Maps Utils (PolyUtil.decode for route polylines) -----
+    implementation(libs.android.maps.utils)
 }
